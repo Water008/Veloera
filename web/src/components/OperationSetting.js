@@ -20,6 +20,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, Spin, Tabs } from '@douyinfe/semi-ui';
 import SettingsGeneral from '../pages/Setting/Operation/SettingsGeneral.js';
 import SettingsDrawing from '../pages/Setting/Operation/SettingsDrawing.js';
+import SettingsModeration from '../pages/Setting/Operation/SettingsModeration.js';
 import SettingsSensitiveWords from '../pages/Setting/Operation/SettingsSensitiveWords.js';
 import SettingsLog from '../pages/Setting/Operation/SettingsLog.js';
 import SettingsDataDashboard from '../pages/Setting/Operation/SettingsDataDashboard.js';
@@ -90,6 +91,14 @@ const OperationSetting = () => {
     RebateEnabled: false,
     RebatePercentage: 0,
     AffEnabled: false,
+    moderation_service: 'veloera',
+    moderation_api_url: '',
+    moderation_api_key: '',
+    moderation_model: '',
+    moderation_auto_ban: false,
+    moderation_no_error: false,
+    moderation_reject_message:
+      'This request may violate our Terms of Use. If you have any questions, please contact the site administrator.',
   });
 
   let [loading, setLoading] = useState(false);
@@ -112,7 +121,9 @@ const OperationSetting = () => {
         }
         if (
           item.key.endsWith('Enabled') ||
-          ['DefaultCollapseSidebar'].includes(item.key)
+          ['DefaultCollapseSidebar', 'moderation_auto_ban', 'moderation_no_error'].includes(
+            item.key,
+          )
         ) {
           newInputs[item.key] = item.value === 'true' ? true : false;
         } else {
@@ -151,6 +162,10 @@ const OperationSetting = () => {
         {/* 绘图设置 */}
         <Card style={{ marginTop: '10px' }}>
           <SettingsDrawing options={inputs} refresh={onRefresh} />
+        </Card>
+        {/* 道德审查设置 */}
+        <Card style={{ marginTop: '10px' }}>
+          <SettingsModeration options={inputs} refresh={onRefresh} />
         </Card>
         {/* 屏蔽词过滤设置 */}
         <Card style={{ marginTop: '10px' }}>

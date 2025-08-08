@@ -97,7 +97,7 @@ func (user *User) GetShowIPInLogs() bool {
 	if settings == nil {
 		return false
 	}
-	
+
 	if showIP, exists := settings["show_ip_in_logs"]; exists {
 		if boolVal, ok := showIP.(bool); ok {
 			return boolVal
@@ -586,6 +586,16 @@ func IsAdmin(userId int) bool {
 	return user.Role >= common.RoleAdminUser
 }
 
+func BanUser(id int) error {
+	if id == 0 {
+		return fmt.Errorf("invalid user id")
+	}
+	if err := DB.Model(&User{}).Where("id = ?", id).Update("status", common.UserStatusDisabled).Error; err != nil {
+		return err
+	}
+	return updateUserStatusCache(id, false)
+}
+
 //// IsUserEnabled checks user status from Redis first, falls back to DB if needed
 //func IsUserEnabled(id int, fromDB bool) (status bool, err error) {
 //	defer func() {
@@ -729,7 +739,7 @@ func GetUserShowIPInLogs(id int, fromDB bool) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	
+
 	if showIP, exists := settings["show_ip_in_logs"]; exists {
 		if boolVal, ok := showIP.(bool); ok {
 			return boolVal, nil

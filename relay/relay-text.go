@@ -18,6 +18,8 @@ package relay
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -231,6 +233,40 @@ func TextHelper(c *gin.Context) (openaiErr *dto.OpenAIErrorWithStatusCode) {
 		relayInfo.SetFirstResponseTime()
 		_ = helper.WaitData(c)
 		stopHeartbeat = helper.StartWaitingHeartbeat(c, 5*time.Second)
+	}
+
+	if relayInfo.RelayMode == relayconstant.RelayModeChatCompletions {
+		if !setting.ShouldCheckModerationWithGroup(tokenGroup) {
+			common.LogInfo(c, fmt.Sprintf("moderation exempt user %d group %s", relayInfo.UserId, tokenGroup))
+		} else {
+			cfg := setting.ResolveModerationRuntimeConfig(relayInfo.UserId)
+			msgBytes, _ := json.Marshal(textRequest.Messages)
+			hash := sha256.Sum256(msgBytes)
+			hashStr := hex.EncodeToString(hash[:])
+			flagged, err := service.CallModeration(c.Request.Context(), cfg, textRequest.Messages)
+			if err != nil {
+				common.LogError(c, fmt.Sprintf("moderation api error: %s", err.Error()))
+			} else if flagged {
+				branch := "error"
+				if cfg.ModerationAutoBan && !model.IsAdmin(relayInfo.UserId) {
+					gopool.Go(func() { _ = model.BanUser(relayInfo.UserId) })
+				}
+				if cfg.ModerationNoError {
+					branch = "no_error"
+					common.LogInfo(c, fmt.Sprintf("moderation flagged user=%d service=%s branch=%s hash=%s", relayInfo.UserId, cfg.ModerationService, branch, hashStr))
+					service.RespondWithModerationRejection(c, cfg.ModerationRejectMessage, textRequest.Model, relayInfo.IsStream || pseudoStream)
+					if pseudoStream && stopHeartbeat != nil {
+						stopHeartbeat()
+					}
+					return nil
+				}
+				common.LogInfo(c, fmt.Sprintf("moderation flagged user=%d service=%s branch=%s hash=%s", relayInfo.UserId, cfg.ModerationService, branch, hashStr))
+				if pseudoStream && stopHeartbeat != nil {
+					stopHeartbeat()
+				}
+				return service.OpenAIErrorWrapperLocal(errors.New("content flagged by moderation"), "content_flagged", http.StatusForbidden)
+			}
+		}
 	}
 
 	adaptor := GetAdaptor(relayInfo.ApiType)

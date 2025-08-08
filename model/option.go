@@ -147,6 +147,14 @@ func InitOptionMap() {
 	common.OptionMap["StreamCacheQueueLength"] = strconv.Itoa(setting.StreamCacheQueueLength)
 	common.OptionMap["AutomaticDisableKeywords"] = operation_setting.AutomaticDisableKeywordsToString()
 
+	common.OptionMap["moderation_service"] = "veloera"
+	common.OptionMap["moderation_api_url"] = ""
+	common.OptionMap["moderation_api_key"] = ""
+	common.OptionMap["moderation_model"] = ""
+	common.OptionMap["moderation_auto_ban"] = "false"
+	common.OptionMap["moderation_no_error"] = "false"
+	common.OptionMap["moderation_reject_message"] = "This request may violate our Terms of Use. If you have any questions, please contact the site administrator."
+
 	// Add custom content options for system customization
 	common.OptionMap["custom_head_html"] = ""
 	common.OptionMap["global_css"] = ""
@@ -439,6 +447,20 @@ func updateOptionMap(key string, value string) (err error) {
 		common.RebatePercentage, _ = strconv.ParseFloat(value, 64)
 	case "ReverseProxyProvider":
 		common.ReverseProxyProvider = value
+	case "moderation_service":
+		setting.ModerationService = value
+	case "moderation_api_url":
+		setting.ModerationAPIURL = value
+	case "moderation_api_key":
+		setting.ModerationAPIKey = value
+	case "moderation_model":
+		setting.ModerationModel = value
+	case "moderation_auto_ban":
+		setting.ModerationAutoBan = value == "true"
+	case "moderation_no_error":
+		setting.ModerationNoError = value == "true"
+	case "moderation_reject_message":
+		setting.ModerationRejectMessage = value
 	}
 	return err
 }
