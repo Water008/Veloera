@@ -19,6 +19,7 @@ package setting
 // ModerationConfig holds runtime moderation configuration
 // populated from database options and hardcoded defaults.
 type ModerationConfig struct {
+	ModerationEnabled       bool
 	ModerationService       string
 	ModerationAPIURL        string
 	ModerationAPIKey        string
@@ -29,6 +30,7 @@ type ModerationConfig struct {
 }
 
 var (
+	ModerationEnabled       = false
 	ModerationService       = "veloera"
 	ModerationAPIURL        = ""
 	ModerationAPIKey        = ""
@@ -42,6 +44,7 @@ var (
 // If service is veloera, it returns hardcoded API values which are not stored in DB.
 func ResolveModerationRuntimeConfig(userId int) ModerationConfig {
 	cfg := ModerationConfig{
+		ModerationEnabled:       ModerationEnabled,
 		ModerationService:       ModerationService,
 		ModerationAPIURL:        ModerationAPIURL,
 		ModerationAPIKey:        ModerationAPIKey,
@@ -61,6 +64,9 @@ func ResolveModerationRuntimeConfig(userId int) ModerationConfig {
 // ShouldCheckModerationWithGroup returns whether moderation should be checked
 // for the given group considering SafeCheckExempt settings.
 func ShouldCheckModerationWithGroup(group string) bool {
+	if !ModerationEnabled {
+		return false
+	}
 	if SafeCheckExemptEnabled && group == SafeCheckExemptGroup {
 		return false
 	}

@@ -31,6 +31,7 @@ export default function SettingsModeration(props) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [inputs, setInputs] = useState({
+    moderation_enabled: false,
     moderation_service: 'veloera',
     moderation_api_url: '',
     moderation_api_key: '',
@@ -48,10 +49,10 @@ export default function SettingsModeration(props) {
     if (!updateArray.length) return showWarning(t('你似乎并没有修改什么'));
     const requestQueue = updateArray.map((item) => {
       let value = '';
-      if (typeof inputs[item.key] === 'boolean') {
-        value = String(inputs[item.key]);
+      if (typeof item.newValue === 'boolean') {
+        value = String(item.newValue);
       } else {
-        value = inputs[item.key];
+        value = item.newValue;
       }
       return API.put('/api/option/', {
         key: item.key,
@@ -101,6 +102,23 @@ export default function SettingsModeration(props) {
 
   const isVeloera = inputs.moderation_service === 'veloera';
 
+  const handleServiceChange = (val) => {
+    const service =
+      typeof val === 'string' ? val : val?.target?.value || val?.value;
+    setInputs({
+      ...inputs,
+      moderation_service: service,
+      moderation_api_url:
+        service === 'veloera' ? '' : inputs.moderation_api_url,
+      moderation_api_key:
+        service === 'veloera' ? '' : inputs.moderation_api_key,
+      moderation_model:
+        service === 'veloera'
+          ? ''
+          : inputs.moderation_model || 'text-moderation-latest',
+    });
+  };
+
   return (
     <>
       <Spin spinning={loading}>
@@ -112,22 +130,26 @@ export default function SettingsModeration(props) {
           <Form.Section text={t('道德审查设置')}>
             <Row gutter={16}>
               <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.Switch
+                  field={'moderation_enabled'}
+                  label={t('启用道德审查')}
+                  size='default'
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      moderation_enabled: value,
+                    })
+                  }
+                />
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
                 <Form.RadioGroup
                   field={'moderation_service'}
                   label={t('审查服务来源')}
                   type='button'
-                  onChange={(value) => {
-                    setInputs({
-                      ...inputs,
-                      moderation_service: value,
-                      moderation_api_url: value === 'veloera' ? '' : inputs.moderation_api_url,
-                      moderation_api_key: value === 'veloera' ? '' : inputs.moderation_api_key,
-                      moderation_model:
-                        value === 'veloera'
-                          ? ''
-                          : inputs.moderation_model || 'text-moderation-latest',
-                    });
-                  }}
+                  onChange={handleServiceChange}
                 >
                   <Form.Radio value='veloera'>
                     {t('使用 Veloera 免费审查服务')}
@@ -257,7 +279,9 @@ export default function SettingsModeration(props) {
             <Row style={{ marginBottom: 10 }}>
               <Col>
                 <Typography.Text type='tertiary'>
-                  {t('此设置受【安全审查豁免】分组设置约束；开启自动封禁账户将跳过管理员。')}
+                  {t(
+                    '此设置受【安全审查豁免】分组设置约束；开启自动封禁账户将跳过管理员。',
+                  )}
                 </Typography.Text>
               </Col>
             </Row>

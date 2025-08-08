@@ -91,6 +91,7 @@ const OperationSetting = () => {
     RebateEnabled: false,
     RebatePercentage: 0,
     AffEnabled: false,
+    moderation_enabled: false,
     moderation_service: 'veloera',
     moderation_api_url: '',
     moderation_api_key: '',
@@ -121,9 +122,12 @@ const OperationSetting = () => {
         }
         if (
           item.key.endsWith('Enabled') ||
-          ['DefaultCollapseSidebar', 'moderation_auto_ban', 'moderation_no_error'].includes(
-            item.key,
-          )
+          [
+            'DefaultCollapseSidebar',
+            'moderation_auto_ban',
+            'moderation_no_error',
+            'moderation_enabled',
+          ].includes(item.key)
         ) {
           newInputs[item.key] = item.value === 'true' ? true : false;
         } else {

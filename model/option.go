@@ -147,6 +147,7 @@ func InitOptionMap() {
 	common.OptionMap["StreamCacheQueueLength"] = strconv.Itoa(setting.StreamCacheQueueLength)
 	common.OptionMap["AutomaticDisableKeywords"] = operation_setting.AutomaticDisableKeywordsToString()
 
+	common.OptionMap["moderation_enabled"] = "false"
 	common.OptionMap["moderation_service"] = "veloera"
 	common.OptionMap["moderation_api_url"] = ""
 	common.OptionMap["moderation_api_key"] = ""
@@ -447,6 +448,8 @@ func updateOptionMap(key string, value string) (err error) {
 		common.RebatePercentage, _ = strconv.ParseFloat(value, 64)
 	case "ReverseProxyProvider":
 		common.ReverseProxyProvider = value
+	case "moderation_enabled":
+		setting.ModerationEnabled = value == "true"
 	case "moderation_service":
 		setting.ModerationService = value
 	case "moderation_api_url":
